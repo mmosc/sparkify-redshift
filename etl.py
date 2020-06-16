@@ -4,6 +4,13 @@ from sql_queries import copy_table_queries, insert_table_queries
 
 
 def load_staging_tables(cur, conn):
+    '''
+    fills in the staging table
+        
+    Arguments:
+    cur  -- cursor
+    conn -- connection to the DB
+    '''
     for query in copy_table_queries:
         print("Executing: ",query)
         cur.execute(query)
@@ -11,6 +18,13 @@ def load_staging_tables(cur, conn):
 
 
 def insert_tables(cur, conn):
+    '''
+    fills in the DB tables from the staging table
+        
+    Arguments:
+    cur  -- cursor
+    conn -- connection to the DB
+    '''
     for query in insert_table_queries:
         print("Executing: ",query)
         cur.execute(query)

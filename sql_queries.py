@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS staging_events (
     userId              INTEGER);
 """)
 
+
+
 staging_songs_table_create = ("""
 CREATE TABLE IF NOT EXISTS staging_songs (
     num_songs           INT NOT NULL,
@@ -120,7 +122,7 @@ COMPUPDATE OFF
 
 staging_songs_copy = ("""
 COPY staging_songs 
-FROM 's3://udacity-dend/song_data/A/A/A/TRA'
+FROM 's3://udacity-dend/song_data'
 CREDENTIALS 'aws_iam_role={}'
 FORMAT AS json 'auto'
 REGION 'us-west-2'
@@ -129,18 +131,92 @@ REGION 'us-west-2'
 # FINAL TABLES
 
 songplay_table_insert = ("""
+INSERT INTO songplays (
+    start_time,
+    user_id, 
+    level,
+    song_id,
+    artist_id,
+    session_id,
+    location,
+    user_agent) \
+SELECT TIMESTAMP 'epoch' + (se.ts/1000)*INTERVAL '1 second' AS start_time,
+    se.userid,
+    se.level,
+    ss.song_id,
+    ss.artist_id,
+    se.sessionid,
+    se.location,
+    se.useragent
+    
+FROM staging_songs AS ss
+JOIN staging_events AS se
+ON (ss.title = se.song AND
+    se.artist = ss.artist_name)
+WHERE se.page='NextSong'
 """)
 
 user_table_insert = ("""
+INSERT INTO users (
+    user_id,
+    first_name,
+    last_name,
+    gender,
+    level) \
+SELECT DISTINCT userid,
+    firstname,
+    lastname,
+    gender,
+    level
+FROM staging_events 
+WHERE page='NextSong'
 """)
 
 song_table_insert = ("""
+INSERT INTO songs(song_id,
+    title,
+    artist_id,
+    year,
+    duration) \
+SELECT DISTINCT song_id,
+    title,
+    artist_id,
+    year,
+    duration
+FROM staging_songs
+WHERE song_id IS NOT NULL
 """)
 
 artist_table_insert = ("""
+INSERT INTO artists(
+    artist_id,
+    name,
+    location,
+    latitude,
+    longitude) \
+SELECT DISTINCT artist_id,
+    artist_name,
+    artist_location,
+    artist_latitude,
+    artist_longitude
+FROM staging_songs
 """)
 
 time_table_insert = ("""
+INSERT INTO time(
+    artist_id,
+    name,
+    location,
+    latitude,
+    longitude) \
+SELECT DISTINCT TIMESTAMP 'epoch' + (ts/1000) * INTERVAL '1 second' as start_time,
+    EXTRACT (HOUR FROM start_time) AS hour,
+    EXTRACT (DAY FROM start_time) AS day,
+    EXTRACT (WEEKS FROM start_time) AS week,
+    EXTRACT (MONTH FROM start_time) AS month,
+    EXTRACT (YEAR FROM start_time) AS year,
+    TO_CHAR(start_time, 'Day') AS weekday
+FROM staging_events
 """)
 
 # QUERY LISTS
