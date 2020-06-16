@@ -57,7 +57,7 @@ The Database schema contains the following tables
 * *song_id, title, artist_id, year, duration
 4. **artists** - artists in music database
 * *artist_id, name, location, latitude, longitude*
-5. **time** - timestamps of records in **songplays** broken down into specific units
+5. **times** - timestamps of records in **songplays** broken down into specific units
 * *start_time, hour, day, week, month, year, weekday
 It is organised as a start schema, that simplifies queries about user activities. The Entity Relation Diagram is as follows
 ![alt text](./sparkify_schema_2.png)
@@ -66,31 +66,9 @@ The diagram is generated using [Visual Paradigm](https://online.visual-paradigm.
 
 In addition to the tables of the star schema, the DB contains two staging tables, ```stating_songs``` and ```staging_events```. These tables are used only as a vehicle for processing data results, and are emptied and reloaded each time without persisting in the results from one execution to the next. They are not used for permanent storage. They allow to use the DB engine rather than the DBMS for operations like sorting or aggregation, which are then more efficient.
 
-
-## Create the tables
-
-<!--- 
-
-## ETL Pipeline
-The ETL Pipeline is executed by running the ```etl.py``` file. It transfers data from files in two local directories into these tables in Postgres using Python and SQL. This is done by executing two similar functions, ```process_log_file``` and ```process_song_file```. The PostgreSQL queries for creating and inserting data are written out in the ```sql_queries.py``` file.
-
-### Process Song
-This function is applied to each ```.json``` file representing an element of our song dataset.
-1. Read the file as pandas dataframe
-2. Extract song data and insert them into the user_table
-
-### Process Log
-This function is applied to each ```.json``` file representing the activity on the app.
-1. Read the file as a pandas dataframe
-2. Filter by NextSong
-3. Convert timestamp column to datetime format 
-4. Split datetime to hour, day, week, month, year, weekday
-5. Extract user data and insert them into the user_table
-6. Extract songplay records (by querying the song_table and artist_table) and insert them into the songplay_table
--->
-
 ## Usage
-### Creating the tables
+After substituting ```db_name,db_user, db_password, db_port``` into the ```dwh.cfg``` file, execute the ```create_cluster.ipynb``` cells **UP TO SECTION 5** to create the clister and store its parameters 
+### Create the tables
 To create the tables, run ```create_tables.py```. This script requires the file ```dwh.cfg``` to be filled in with the following information about the cluster
 CLUSTER:
  - HOST
@@ -100,18 +78,27 @@ CLUSTER:
  - DB_PORT
 IAM ROLE:
  - ARN
-<!--2. Run ```etl.py``` process the data and insert them into the database.
+This script creates the staging tables as well as the tables of the schema.
+
+### ETL pipeline
+
+Simply execute the ```etl.py``` file.
+
+First, data are copied from the ```.json``` files into the ```stating_songs``` and ```staging_events``` tables. Then they are sorted into the tables of the schema. When needed, entries are filtered by NextSong. Furthermore, the timestamp is converted to hour, day, week, month, year, weekday.
+
+
+The queries of both ```etl.py``` and ```create_tables.py``` are stored in the file ```sql_queries.py```.
+
+
 ### Queries
 Example queries for each of the tables can be found in the ```test.ipynb``` file. As additional example, here's a query for checking on which day of the week a specific song, displayed by title, was played
 ```
 SELECT  s.title, t.weekday 
-FROM songplay_table AS sp JOIN song_table AS s ON sp.song_id=s.song_id
-                        JOIN time_table AS t ON sp.start_time=t.start_time
+FROM songplays AS sp JOIN songs AS s ON sp.song_id=s.song_id
+                        JOIN times AS t ON sp.start_time=t.start_time
+                        LIMIT 1
 ```
 This should return 
 | title         | weekday       |
 | ------------- |:-------------:| 
-| Setanta matins|2              |
-
-
--->
+| If I Ain't Got You|Monday              |

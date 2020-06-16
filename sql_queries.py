@@ -203,12 +203,14 @@ FROM staging_songs
 """)
 
 time_table_insert = ("""
-INSERT INTO time(
-    artist_id,
-    name,
-    location,
-    latitude,
-    longitude) \
+INSERT INTO times (
+    start_time,
+    hour,
+    day,
+    week,
+    month,
+    year,
+    weekday) \
 SELECT DISTINCT TIMESTAMP 'epoch' + (ts/1000) * INTERVAL '1 second' as start_time,
     EXTRACT (HOUR FROM start_time) AS hour,
     EXTRACT (DAY FROM start_time) AS day,
