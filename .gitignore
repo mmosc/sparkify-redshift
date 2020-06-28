@@ -2,5 +2,3 @@ __pycache__/
 .ipynb_checkpoints/
 ./dwh.cfg
 dwh.cfg
-./create_cluster.ipynb
-create_cluster.ipynb
